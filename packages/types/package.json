@@ -1,0 +1,14 @@
+{
+  "name": "@fnsn/types",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "exports":{
+    ".":{
+      "types": "./src/types.ts"
+    } 
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
