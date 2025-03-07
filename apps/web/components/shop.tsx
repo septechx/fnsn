@@ -1,11 +1,24 @@
 "use client";
 
+import type { ItemType, ShopResponse } from "@fnsn/types";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Filter } from "lucide-react";
+import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Checkbox } from "./ui/checkbox";
-import type { ShopResponse, ItemType } from "@fnsn/types";
 
-const defaultFilters: Readonly<ItemType[]> = [
+const itemTypeArr: Readonly<ItemType[]> = [
   "glider",
   "emote",
   "sparks_song",
@@ -25,114 +38,186 @@ const defaultFilters: Readonly<ItemType[]> = [
   "sparks_drum",
 ];
 
-export default function Shop({ shop }: { shop: ShopResponse }) {
-  const [filters, setFilters] = useState(
-    () =>
-      Object.fromEntries(
-        defaultFilters.map((filter) => [filter, true]),
-      ) as Record<ItemType, boolean>,
-  );
-  const date = new Date(shop.lastUpdate.date);
+const filterMap: Record<string, Partial<Record<ItemType | "self", string>>> = {
+  festival: {
+    self: "Festival",
+    sparks_song: "Jam track",
+    sparks_guitar: "Guitar",
+    sparks_bass: "Bass",
+    sparks_microphone: "Microphone",
+    sparks_drum: "Drum kit",
+  },
+  battle_royale: {
+    self: "Battle royale",
+    glider: "Glider",
+    emote: "Emote",
+    outfit: "Skin",
+    wrap: "Wrap",
+
+    shoes: "Kicks",
+    pickaxe: "Pickaxe",
+    contrail: "Contrail",
+    backpack: "Back bling",
+  },
+  rocket_racing: {
+    self: "Rocket racing",
+    vehicle_wheel: "Wheels",
+    vehicle_booster: "Nitro",
+    vehicle_body: "Car",
+  },
+  other: {
+    self: "Other",
+    bundle: "Bundle",
+  },
+};
+
+const itemColors: Record<ItemType, string> = {
+  glider: "bg-red-500",
+  emote: "bg-blue-500",
+  sparks_song: "bg-cyan-500",
+  outfit: "bg-orange-500",
+  vehicle_wheel: "bg-yellow-500",
+  bundle: "bg-purple-500",
+  vehicle_booster: "bg-green-500",
+  shoes: "bg-pink-500",
+  pickaxe: "bg-teal-500",
+  wrap: "bg-indigo-500",
+  contrail: "bg-lime-500",
+  sparks_guitar: "bg-rose-500",
+  sparks_bass: "bg-amber-500",
+  sparks_microphone: "bg-emerald-500",
+  vehicle_body: "bg-fuchsia-500",
+  backpack: "bg-sky-500",
+  sparks_drum: "bg-violet-500",
+};
+
+function useFilters<T extends string>(factory: () => Record<T, boolean>) {
+  const [filters, setFilters] = useState<Record<T, boolean>>(factory);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && localStorage.getItem("filters"))
+    if (localStorage.getItem("filters")) {
       setFilters(JSON.parse(localStorage.getItem("filters")!));
+    }
   }, []);
 
   useEffect(() => {
     localStorage.setItem("filters", JSON.stringify(filters));
   }, [filters]);
 
+  function toggleFilter(filter: T) {
+    setFilters((p) => ({ ...p, [filter]: !filters[filter] }));
+  }
+
+  return {
+    filters,
+    toggleFilter,
+  };
+}
+
+export default function Shop({ shop }: { shop: ShopResponse }) {
+  const { filters, toggleFilter } = useFilters<ItemType>(
+    () =>
+      Object.fromEntries(
+        itemTypeArr.map((itemType) => [itemType, true]),
+      ) as Record<ItemType, boolean>,
+  );
+  const date = new Date(shop.lastUpdate.date);
+
   return (
-    <main className="flex flex-col w-full h-full">
-      <div className="w-full flex justify-center mt-4">
-        <h1 className="text-3xl">
-          Shop from: {date.getUTCFullYear()}-
-          {String(date.getUTCMonth() + 1).padStart(2, "0")}-
-          {String(date.getUTCDate()).padStart(2, "0")}
-        </h1>
-      </div>
-      <div className="flex gap-2 justify-center flex-wrap">
-        {defaultFilters.map((itemType, i) => (
-          <div key={i} className="flex items-center h-8 gap-2">
-            <Checkbox
-              className="cursor-pointer w-6 h-6"
-              checked={filters[itemType]}
-              onClick={() =>
-                setFilters((p) => ({ ...p, [itemType]: !p[itemType] }))
-              }
-            />
-            {itemType[0].toUpperCase() + itemType.substring(1)}
-          </div>
-        ))}
-      </div>
-      <div className="flex-wrap w-full p-4 gap-2 flex justify-center">
+    <div>
+      <header className="w-full bg-primary-foreground h-16 text-4xl grid grid-cols-3 grid-rows-1 items-center p-4 font-bold">
+        <div className="flex justify-start gap-2">
+          <h1>FNSN</h1>
+          <h2 className="text-xl">v1.0.0</h2>
+        </div>
+        <div className="flex justify-center">
+          <h1>
+            {date.getUTCFullYear()}-
+            {String(date.getUTCMonth() + 1).padStart(2, "0")}-
+            {String(date.getUTCDate()).padStart(2, "0")}
+          </h1>
+        </div>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="cursor-pointer">
+                <Filter />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="font-bold">
+                Filters
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                {Object.values(filterMap).map((val, i) => (
+                  <DropdownMenuSub key={i}>
+                    <DropdownMenuSubTrigger>{val.self}</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {Object.keys(val)
+                        .filter((key) => key !== "self")
+                        .map((key, i) => (
+                          <DropdownMenuCheckboxItem
+                            key={i}
+                            className="cursor-pointer"
+                            checked={filters[key as ItemType]}
+                            onCheckedChange={() =>
+                              toggleFilter(key as ItemType)
+                            }
+                          >
+                            {val[key as keyof typeof val]}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+      <main className="flex-wrap w-full p-4 gap-2 flex justify-center">
         {shop.shop
           .filter((item) => filters[item.mainType])
           .map((item, i) => (
-            <div
-              key={i}
-              className={cn(
-                "w-96 h-16 rounded-md items-center flex justify-center relative overflow-hidden",
-                getColor(item.mainType),
-              )}
-            >
-              <h2>{item.displayName}</h2>
-              <div className="absolute top-0 left-0 pl-1">
-                V
-                {Math.max(
-                  item.price.regularPrice,
-                  item.price.finalPrice,
-                  item.price.floorPrice,
-                )}
-              </div>
-              <div className="absolute top-0 right-0 pr-1">
-                {item.banner?.name}
-              </div>
-            </div>
+            <ShopItem item={item} key={i} />
           ))}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
-function getColor(itemType: ItemType) {
-  switch (itemType) {
-    case "glider":
-      return "bg-red-500";
-    case "emote":
-      return "bg-blue-500";
-    case "sparks_song":
-      return "bg-cyan-500";
-    case "outfit":
-      return "bg-orange-500";
-    case "vehicle_wheel":
-      return "bg-yellow-500";
-    case "bundle":
-      return "bg-purple-500";
-    case "vehicle_booster":
-      return "bg-green-500";
-    case "shoes":
-      return "bg-pink-500";
-    case "pickaxe":
-      return "bg-teal-500";
-    case "wrap":
-      return "bg-indigo-500";
-    case "contrail":
-      return "bg-lime-500";
-    case "sparks_guitar":
-      return "bg-rose-500";
-    case "sparks_bass":
-      return "bg-amber-500";
-    case "sparks_microphone":
-      return "bg-emerald-500";
-    case "vehicle_body":
-      return "bg-fuchsia-500";
-    case "backpack":
-      return "bg-sky-500";
-    case "sparks_drum":
-      return "bg-violet-500";
-    default:
-      return "bg-accent";
-  }
+function ShopItem({ item }: { item: ShopResponse["shop"][number] }) {
+  return (
+    <div>
+      <div
+        className={cn(
+          "w-64 h-64 p-1 rounded-t-md relative",
+          itemColors[item.mainType],
+        )}
+      >
+        {/* eslint-disable-next-line */}
+        <img
+          className="rounded-md"
+          alt=""
+          src={item.granted[0].images.background}
+        />
+        <div className="absolute top-0 left-0 pl-2 pt-1 font-bold">
+          {item.price.finalPrice}
+        </div>
+        <div className="absolute top-0 right-0 pr-2 pt-1 font-bold">
+          {item.banner?.name}
+        </div>
+      </div>
+      <div
+        className={cn(
+          "w-64 h-6 flex justify-center items-center font-bold rounded-b-md",
+          itemColors[item.mainType],
+        )}
+      >
+        {item.displayName.slice(0, 24)}
+        {item.displayName.length > 24 && "..."}
+      </div>
+    </div>
+  );
 }
