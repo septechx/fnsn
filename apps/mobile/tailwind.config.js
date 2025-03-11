@@ -1,6 +1,7 @@
+const lynxPreset = require('@lynx-js/tailwind-preset');
+
 /** @type {import('tailwindcss').Config} */
 export default {
-  corePlugins: {
-    textTransform: false,
-  },
+  presets: [lynxPreset],
+  content: ['./src/**/*.{html,js,ts,jsx,tsx}'],
 };
