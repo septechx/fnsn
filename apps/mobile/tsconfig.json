@@ -10,7 +10,12 @@
     "verbatimModuleSyntax": true,
 
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "exclude": ["dist/"]
 }
